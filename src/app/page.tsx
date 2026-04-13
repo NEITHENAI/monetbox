@@ -210,14 +210,23 @@ function NewsletterForm() {
     setStatus("submitting");
     
     const formData = new FormData(e.currentTarget);
-    formData.append("access_key", process.env.NEXT_PUBLIC_WEB3FORMS_KEY || "");
-    formData.append("subject", "New Newsletter Subscription - Monetbox");
-    formData.append("from_name", "Monetbox Gallery");
+    const dataObj = Object.fromEntries(formData.entries());
+    
+    const payload = {
+      ...dataObj,
+      access_key: process.env.NEXT_PUBLIC_WEB3FORMS_KEY || "",
+      subject: "New Newsletter Subscription - Monetbox",
+      from_name: "Monetbox Gallery",
+    };
 
     try {
       const response = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();

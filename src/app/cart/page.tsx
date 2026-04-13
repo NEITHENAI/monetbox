@@ -41,18 +41,26 @@ export default function CartPage() {
     setIsSubmitting(true);
     
     const formData = new FormData(e.currentTarget);
-    formData.append("access_key", process.env.NEXT_PUBLIC_WEB3FORMS_KEY || "");
-    formData.append("subject", "New Artwork Order - Monetbox");
-    formData.append("from_name", "Monetbox Checkout");
-    
+    const dataObj = Object.fromEntries(formData.entries());
     const itemsList = cart.map(item => `• ${item.title} by ${item.artist} (UGX ${item.price})`).join('\n');
-    formData.append("order_items", itemsList);
-    formData.append("order_total", `UGX ${total.toLocaleString()}`);
+    
+    const payload = {
+      ...dataObj,
+      access_key: process.env.NEXT_PUBLIC_WEB3FORMS_KEY || "",
+      subject: "New Artwork Order - Monetbox",
+      from_name: "Monetbox Checkout",
+      order_items: itemsList,
+      order_total: `UGX ${total.toLocaleString()}`,
+    };
 
     try {
       const resp = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
       });
       const data = await resp.json();
       if (data.success) {
