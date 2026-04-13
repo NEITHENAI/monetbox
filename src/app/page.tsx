@@ -194,13 +194,63 @@ export default function Home() {
           {user ? (
             <p style={{ marginTop: "1rem", fontStyle: "italic" }}>You are already subscribed to our inner circle updates!</p>
           ) : (
-            <form className={styles.newsletterForm} onSubmit={(e) => e.preventDefault()}>
-              <input type="email" placeholder="Enter your email address" required className="form-input" style={{ width: 'auto', minWidth: '300px' }} />
-              <button type="submit" className="btn-primary">Subscribe</button>
-            </form>
+            <NewsletterForm />
           )}
         </div>
       </section>
     </div>
+  );
+}
+
+function NewsletterForm() {
+  const [status, setStatus] = React.useState<"idle" | "submitting" | "success" | "error">("idle");
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setStatus("submitting");
+    
+    const formData = new FormData(e.currentTarget);
+    formData.append("access_key", process.env.NEXT_PUBLIC_WEB3FORMS_KEY || "");
+    formData.append("subject", "New Newsletter Subscription - Monetbox");
+    formData.append("from_name", "Monetbox Gallery");
+
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setStatus("success");
+      } else {
+        setStatus("error");
+      }
+    } catch (err) {
+      console.error("Newsletter error", err);
+      setStatus("error");
+    }
+  };
+
+  if (status === "success") {
+    return <p className="animate-fade-in" style={{ color: "var(--accent)", fontStyle: "italic" }}>Welcome to the circle! Check your inbox soon.</p>;
+  }
+
+  return (
+    <form className={styles.newsletterForm} onSubmit={handleSubmit}>
+      <input 
+        type="email" 
+        name="email"
+        placeholder="Enter your email address" 
+        required 
+        className="form-input" 
+        style={{ width: 'auto', minWidth: '300px' }} 
+        disabled={status === "submitting"}
+      />
+      <button type="submit" className="btn-primary" disabled={status === "submitting"}>
+        {status === "submitting" ? "Joining..." : "Subscribe"}
+      </button>
+      {status === "error" && <p style={{ color: "var(--danger)", fontSize: "0.8rem", marginTop: "0.5rem" }}>Something went wrong. Please try again.</p>}
+    </form>
   );
 }

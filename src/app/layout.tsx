@@ -51,13 +51,6 @@ export default function RootLayout({
                     <li><a href="#">Contact</a></li>
                   </ul>
                 </div>
-                <div className="footer-col">
-                  <h3>Legal</h3>
-                  <ul>
-                    <li><a href="#">Privacy Policy</a></li>
-                    <li><a href="#">Terms of Service</a></li>
-                  </ul>
-                </div>
               </div>
               <div className="footer-bottom">
                 <p>&copy; 2026 Monetbox. All rights reserved.</p>

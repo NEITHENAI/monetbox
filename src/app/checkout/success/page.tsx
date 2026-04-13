@@ -16,8 +16,8 @@ export default function SuccessPage() {
           </div>
         </div>
         
-        <h1 className="serif">Order Initiated</h1>
-        <p className={styles.subtitle}>Thank you for your interest in Monetbox collection.</p>
+        <h1 className="serif">Order Received</h1>
+        <p className={styles.subtitle}>Thank you for choosing Monetbox. Your request is being processed.</p>
         
         <div className={styles.divider}></div>
         
@@ -26,15 +26,15 @@ export default function SuccessPage() {
           <ul>
             <li>
               <span className={styles.stepNumber}>1</span>
-              <p>You have been redirected to our WhatsApp coordinator.</p>
+              <p>Our curator will review your order details immediately.</p>
             </li>
             <li>
               <span className={styles.stepNumber}>2</span>
-              <p>We will confirm the availability of your selected pieces.</p>
+              <p><strong>You will be contacted very soon</strong> via email or WhatsApp to finalize payment.</p>
             </li>
             <li>
               <span className={styles.stepNumber}>3</span>
-              <p>Payment details and shipping timeline will be shared directly.</p>
+              <p>Once confirmed, your artwork will be professionally packed and shipped.</p>
             </li>
           </ul>
         </div>

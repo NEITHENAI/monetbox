@@ -215,9 +215,15 @@
   font-weight: 700;
 }
 
-.checkoutBtn {
+.checkoutActions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.checkoutBtn, .formCheckoutBtn {
   width: 100%;
-  margin-bottom: 1.5rem;
 }
 
 .summaryGuarantees {
@@ -251,5 +257,45 @@
   .itemImage {
     width: 100px;
     height: 100px;
+  }
+}
+
+/* New Form Styles */
+.formOverlay {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.orderForm {
+  padding: 2.5rem;
+  border-radius: var(--radius-lg);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.formActions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--glass-border);
+}
+
+@media (max-width: 600px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .formActions {
+    flex-direction: column-reverse;
+    gap: 1rem;
+  }
+  
+  .formActions button {
+    width: 100%;
   }
 }
