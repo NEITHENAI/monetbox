@@ -11,7 +11,7 @@ import {
   orderBy,
   getDoc,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { db, storage } from "./firebase";
 import { paintings as mockPaintings, type Painting } from "./mockData";
 
@@ -46,17 +46,46 @@ export async function seedPaintingsIfEmpty(): Promise<void> {
 // Upload an image to Firebase Storage and return the URL
 export async function uploadImage(file: File): Promise<string> {
   console.log("Starting upload for file:", file.name, "Size:", file.size);
-  try {
-    const storageRef = ref(storage, `paintings/${Date.now()}_${file.name}`);
-    const snapshot = await uploadBytes(storageRef, file);
-    console.log("Upload successful, getting download URL...");
-    const downloadURL = await getDownloadURL(snapshot.ref);
-    console.log("Download URL obtained:", downloadURL);
-    return downloadURL;
-  } catch (error) {
-    console.error("Error in uploadImage:", error);
-    throw error;
-  }
+  
+  return new Promise((resolve, reject) => {
+    try {
+      const storageRef = ref(storage, `paintings/${Date.now()}_${file.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      // Add a manual timeout of 30 seconds
+      const timeout = setTimeout(() => {
+        uploadTask.cancel();
+        reject(new Error("Upload timed out after 30 seconds. Please check your internet connection or Firebase Storage rules."));
+      }, 30000);
+
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log("Upload is " + progress + "% done");
+        },
+        (error) => {
+          clearTimeout(timeout);
+          console.error("Upload failed with error:", error);
+          reject(error);
+        },
+        async () => {
+          clearTimeout(timeout);
+          try {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            console.log("Upload successful! URL:", downloadURL);
+            resolve(downloadURL);
+          } catch (err) {
+            console.error("Error getting download URL:", err);
+            reject(err);
+          }
+        }
+      );
+    } catch (error) {
+      console.error("Error initializing upload:", error);
+      reject(error);
+    }
+  });
 }
 
 // Fetch all paintings once
