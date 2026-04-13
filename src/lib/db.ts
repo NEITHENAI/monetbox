@@ -9,21 +9,46 @@ import {
   setDoc,
   query,
   orderBy,
+  getDoc,
 } from "firebase/firestore";
-import { db } from "./firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from "./firebase";
 import { paintings as mockPaintings, type Painting } from "./mockData";
 
 const PAINTINGS_COLLECTION = "paintings";
+const METADATA_COLLECTION = "metadata";
+const SYSTEM_DOC = "system";
 
-// Seed Firestore with mock data if the collection is empty
+// Seed Firestore with mock data if the collection is empty AND seeding hasn't been disabled
 export async function seedPaintingsIfEmpty(): Promise<void> {
+  const metaRef = doc(db, METADATA_COLLECTION, SYSTEM_DOC);
+  const metaSnap = await getDoc(metaRef);
+  
+  // If we've already seeded or determined we don't want to seed, stop
+  if (metaSnap.exists() && metaSnap.data().initialized) {
+    return;
+  }
+
   const snapshot = await getDocs(collection(db, PAINTINGS_COLLECTION));
   if (snapshot.empty) {
     for (const painting of mockPaintings) {
+      // Use setDoc with the mock ID to maintain consistency during initial seed
       await setDoc(doc(db, PAINTINGS_COLLECTION, painting.id), painting);
     }
+    await setDoc(metaRef, { initialized: true }, { merge: true });
     console.log("Seeded Firestore with mock paintings.");
+  } else {
+    // If there's already data, mark as initialized anyway
+    await setDoc(metaRef, { initialized: true }, { merge: true });
   }
+}
+
+// Upload an image to Firebase Storage and return the URL
+export async function uploadImage(file: File): Promise<string> {
+  const storageRef = ref(storage, `paintings/${Date.now()}_${file.name}`);
+  const snapshot = await uploadBytes(storageRef, file);
+  const downloadURL = await getDownloadURL(snapshot.ref);
+  return downloadURL;
 }
 
 // Fetch all paintings once

@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { type Painting } from "@/lib/mockData";
-import { subscribeToPaintings, addPainting, updatePainting, deletePainting, seedPaintingsIfEmpty } from "@/lib/db";
+import { subscribeToPaintings, addPainting, updatePainting, deletePainting, seedPaintingsIfEmpty, uploadImage } from "@/lib/db";
 import styles from "./dashboard.module.css";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,13 +17,16 @@ export default function AdminDashboard() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Form state
   const [form, setForm] = useState({
     title: "", artist: "", price: "", imageUrl: "", description: "",
     dimensions: "", medium: "", year: "", category: "Abstract",
   });
-
+  
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Subscribe to Firestore paintings in real-time
   useEffect(() => {
@@ -44,28 +47,52 @@ export default function AdminDashboard() {
     setForm({ title: "", artist: "", price: "", imageUrl: "", description: "", dimensions: "", medium: "", year: "", category: "Abstract" });
     setEditingId(null);
     setShowForm(false);
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsUploading(true);
     try {
+      let finalImageUrl = form.imageUrl;
+
+      // Upload file if selected
+      if (selectedFile) {
+        showToast("info", "Uploading image...");
+        finalImageUrl = await uploadImage(selectedFile);
+      }
+
       if (editingId) {
-        await updatePainting(editingId, { ...form, price: Number(form.price), year: Number(form.year) });
+        await updatePainting(editingId, { ...form, imageUrl: finalImageUrl, price: Number(form.price), year: Number(form.year) });
         showToast("success", "Painting updated successfully!");
       } else {
         await addPainting({
           ...form,
+          imageUrl: finalImageUrl,
           price: Number(form.price),
           year: Number(form.year),
           inStock: true,
         });
         showToast("success", "Painting added successfully!");
       }
+      resetForm();
     } catch (err) {
       console.error(err);
-      showToast("error", "Something went wrong.");
+      showToast("error", "Something went wrong during submission.");
+    } finally {
+      setIsUploading(false);
     }
-    resetForm();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      // Create a temporary preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setForm(prev => ({ ...prev, imageUrl: previewUrl }));
+    }
   };
 
   const handleEdit = (p: Painting) => {
@@ -76,6 +103,7 @@ export default function AdminDashboard() {
     });
     setEditingId(p.id);
     setShowForm(true);
+    setSelectedFile(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -213,8 +241,25 @@ export default function AdminDashboard() {
                 <input className="form-input" type="number" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} required />
               </div>
               <div className="form-group">
-                <label className="form-label">Image URL</label>
-                <input className="form-input" value={form.imageUrl} onChange={e => setForm({ ...form, imageUrl: e.target.value })} required />
+                <label className="form-label">Painting Image</label>
+                <div className={styles.fileUploadWrapper}>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleFileChange} 
+                    ref={fileInputRef}
+                    className={styles.fileInput}
+                    id="painting-upload"
+                  />
+                  <label htmlFor="painting-upload" className={styles.fileLabel}>
+                    {selectedFile ? selectedFile.name : "Choose image file..."}
+                  </label>
+                </div>
+                {form.imageUrl && (
+                  <div className={styles.imagePreview}>
+                    <img src={form.imageUrl} alt="Preview" />
+                  </div>
+                )}
               </div>
               <div className="form-group">
                 <label className="form-label">Dimensions</label>
@@ -245,8 +290,10 @@ export default function AdminDashboard() {
                 <textarea className="form-input form-textarea" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
               </div>
               <div className={styles.formActions}>
-                <button type="button" className="btn-secondary" onClick={resetForm}>Cancel</button>
-                <button type="submit" className="btn-primary">{editingId ? "Save Changes" : "Add Painting"}</button>
+                <button type="button" className="btn-secondary" onClick={resetForm} disabled={isUploading}>Cancel</button>
+                <button type="submit" className="btn-primary" disabled={isUploading}>
+                  {isUploading ? "Uploading..." : (editingId ? "Save Changes" : "Add Painting")}
+                </button>
               </div>
             </form>
           </div>
