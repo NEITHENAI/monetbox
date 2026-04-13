@@ -60,9 +60,9 @@ export default function AdminDashboard() {
 
       // Upload file if selected
       if (selectedFile) {
-        showToast("info", "Starting image upload...");
+        showToast("info", "Processing and compressing image...");
         finalImageUrl = await uploadImage(selectedFile);
-        showToast("info", "Image uploaded successfully!");
+        showToast("info", "Image processed successfully!");
       }
 
       showToast("info", "Saving painting details...");

@@ -11,8 +11,7 @@ import {
   orderBy,
   getDoc,
 } from "firebase/firestore";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { db, storage } from "./firebase";
+import { db } from "./firebase";
 import { paintings as mockPaintings, type Painting } from "./mockData";
 
 const PAINTINGS_COLLECTION = "paintings";
@@ -43,46 +42,61 @@ export async function seedPaintingsIfEmpty(): Promise<void> {
   }
 }
 
-// Upload an image to Firebase Storage and return the URL
+// Compress image and return Base64 string
 export async function uploadImage(file: File): Promise<string> {
-  console.log("Starting upload for file:", file.name, "Size:", file.size);
+  console.log("Starting Base64 compression for file:", file.name, "Original Size:", file.size);
   
   return new Promise((resolve, reject) => {
     try {
-      const storageRef = ref(storage, `paintings/${Date.now()}_${file.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, file);
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        
+        img.onload = () => {
+          // Setup canvas for compression
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 800; // Limit width to keep Base64 size small
+          const MAX_HEIGHT = 800;
+          let width = img.width;
+          let height = img.height;
 
-      // Add a manual timeout of 30 seconds
-      const timeout = setTimeout(() => {
-        uploadTask.cancel();
-        reject(new Error("Upload timed out after 30 seconds. Please check your internet connection or Firebase Storage rules."));
-      }, 30000);
-
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log("Upload is " + progress + "% done");
-        },
-        (error) => {
-          clearTimeout(timeout);
-          console.error("Upload failed with error:", error);
-          reject(error);
-        },
-        async () => {
-          clearTimeout(timeout);
-          try {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            console.log("Upload successful! URL:", downloadURL);
-            resolve(downloadURL);
-          } catch (err) {
-            console.error("Error getting download URL:", err);
-            reject(err);
+          // Calculate new dimensions maintaining aspect ratio
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
           }
-        }
-      );
+
+          canvas.width = width;
+          canvas.height = height;
+
+          // Draw and compress
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error("Failed to get canvas context"));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Export to Base64 (compressing to 0.6 quality JPEG to ensure it fits in Firestore)
+          const base64String = canvas.toDataURL('image/jpeg', 0.6);
+          console.log("Compression successful. New approx size:", Math.round((base64String.length * 3) / 4), "bytes");
+          resolve(base64String);
+        };
+        
+        img.onerror = (err) => reject(new Error("Failed to load image for compression"));
+      };
+      reader.onerror = (err) => reject(new Error("Failed to read file"));
     } catch (error) {
-      console.error("Error initializing upload:", error);
+      console.error("Error initializing Base64 compression:", error);
       reject(error);
     }
   });
