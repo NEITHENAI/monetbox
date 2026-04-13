@@ -111,7 +111,7 @@
 /* Stats Grid */
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -150,7 +150,7 @@
 /* Form Panel */
 .formPanel {
   border-radius: var(--radius);
-  padding: 2rem;
+  padding: 1.5rem;
   margin-bottom: 2rem;
 }
 
@@ -202,10 +202,19 @@
 
 .tableHeader {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem 2rem;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+  padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--glass-border);
+}
+
+@media (min-width: 600px) {
+  .tableHeader {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
 }
 
 .tableHeader h2 {
@@ -299,6 +308,14 @@
   .topBar {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 1.25rem;
+  }
+
+  .main {
+    padding: 1.5rem 1rem;
+  }
+  
+  .pageTitle {
+    font-size: 1.5rem;
   }
 }

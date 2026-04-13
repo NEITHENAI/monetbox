@@ -22,6 +22,7 @@
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 15px 50px rgba(0, 0, 0, 0.5);
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --tap-target: 44px;
 }
 
 * {
@@ -173,6 +174,9 @@ img {
   background: transparent;
   color: var(--foreground);
   border: 1px solid var(--glass-border);
+  min-height: var(--tap-target);
+  display: inline-flex;
+  align-items: center;
 }
 
 .btn-nav-outline:hover {
@@ -185,6 +189,9 @@ img {
   color: #000;
   border: none;
   box-shadow: 0 2px 10px var(--accent-glow);
+  min-height: var(--tap-target);
+  display: inline-flex;
+  align-items: center;
 }
 
 .btn-nav-filled:hover {
@@ -634,4 +641,24 @@ img {
     gap: 1rem;
     text-align: center;
   }
+}
+
+/* Mobile Navigation Overlay */
+.nav-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transition: var(--transition);
+}
+
+.nav-overlay-active {
+  opacity: 1;
+  visibility: visible;
 }
