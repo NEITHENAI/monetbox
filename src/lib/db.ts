@@ -45,10 +45,18 @@ export async function seedPaintingsIfEmpty(): Promise<void> {
 
 // Upload an image to Firebase Storage and return the URL
 export async function uploadImage(file: File): Promise<string> {
-  const storageRef = ref(storage, `paintings/${Date.now()}_${file.name}`);
-  const snapshot = await uploadBytes(storageRef, file);
-  const downloadURL = await getDownloadURL(snapshot.ref);
-  return downloadURL;
+  console.log("Starting upload for file:", file.name, "Size:", file.size);
+  try {
+    const storageRef = ref(storage, `paintings/${Date.now()}_${file.name}`);
+    const snapshot = await uploadBytes(storageRef, file);
+    console.log("Upload successful, getting download URL...");
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    console.log("Download URL obtained:", downloadURL);
+    return downloadURL;
+  } catch (error) {
+    console.error("Error in uploadImage:", error);
+    throw error;
+  }
 }
 
 // Fetch all paintings once

@@ -54,32 +54,43 @@ export default function AdminDashboard() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUploading(true);
+    console.log("Submit started", { form, selectedFile });
     try {
       let finalImageUrl = form.imageUrl;
 
       // Upload file if selected
       if (selectedFile) {
-        showToast("info", "Uploading image...");
+        showToast("info", "Starting image upload...");
         finalImageUrl = await uploadImage(selectedFile);
+        showToast("info", "Image uploaded successfully!");
       }
 
+      showToast("info", "Saving painting details...");
       if (editingId) {
-        await updatePainting(editingId, { ...form, imageUrl: finalImageUrl, price: Number(form.price), year: Number(form.year) });
-        showToast("success", "Painting updated successfully!");
+        const success = await updatePainting(editingId, { ...form, imageUrl: finalImageUrl, price: Number(form.price), year: Number(form.year) });
+        if (success) {
+          showToast("success", "Painting updated successfully!");
+        } else {
+          showToast("error", "Failed to update painting in database.");
+        }
       } else {
-        await addPainting({
+        const newId = await addPainting({
           ...form,
           imageUrl: finalImageUrl,
           price: Number(form.price),
           year: Number(form.year),
           inStock: true,
         });
-        showToast("success", "Painting added successfully!");
+        if (newId) {
+          showToast("success", "Painting added successfully!");
+        } else {
+          showToast("error", "Failed to add painting to database.");
+        }
       }
       resetForm();
-    } catch (err) {
-      console.error(err);
-      showToast("error", "Something went wrong during submission.");
+    } catch (err: any) {
+      console.error("Submission error:", err);
+      showToast("error", `Error: ${err.message || "Something went wrong during submission."}`);
     } finally {
       setIsUploading(false);
     }
