@@ -1,17 +1,34 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { paintings, categories } from "@/lib/mockData";
+import { categories, type Painting } from "@/lib/mockData";
+import { subscribeToPaintings, seedPaintingsIfEmpty } from "@/lib/db";
+import { useAuth } from "@/contexts/AuthContext";
+import PaintingCard from "@/components/PaintingCard";
 import styles from "./page.module.css";
 
 export default function Home() {
+  const { user, isAdmin } = useAuth();
+  const [paintings, setPaintings] = useState<Painting[]>([]);
   const [activeCategory, setActiveCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const [showAll, setShowAll] = useState(false);
 
-  const filtered = activeCategory === "All" 
-    ? paintings 
-    : paintings.filter(p => p.category === activeCategory);
+  useEffect(() => {
+    seedPaintingsIfEmpty();
+    const unsubscribe = subscribeToPaintings((data) => {
+      setPaintings(data);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const filtered = paintings.filter(p => {
+    const matchesCategory = activeCategory === "All" || p.category === activeCategory;
+    const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         p.artist.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const displayed = showAll ? filtered : filtered.slice(0, 4);
 
@@ -22,15 +39,17 @@ export default function Home() {
         <div className={styles.heroContent}>
           <span className={`${styles.heroTag} animate-fade-in`}>✦ Curated Art Gallery</span>
           <h1 className="animate-fade-in delay-1">Discover<br/>Masterpieces.</h1>
-          <p className="animate-fade-in delay-2">
-            Curated collections from visionary artists around the world. 
-            Elevate your space with original paintings, each one a window to another world.
+          <p className={styles.subtitle}>
+            Discover and acquire extraordinary paintings from independent artists around the globe.
           </p>
-          <div className={`${styles.ctaGroup} animate-fade-in delay-3`}>
-            <button className="btn-primary" onClick={() => document.getElementById('gallery')?.scrollIntoView({ behavior: 'smooth' })}>
-              Explore Gallery
-            </button>
-            <Link href="/register" className="btn-outline">Join Free</Link>
+          <div className={`${styles.heroActions} animate-fade-in delay-3`}>
+            <Link href="#gallery" className="btn-primary">Explore Gallery</Link>
+            {!user && (
+              <Link href="/register" className="btn-secondary">Join for Free</Link>
+            )}
+            {isAdmin && (
+               <Link href="/admin/dashboard" className="btn-secondary">Go to Dashboard</Link>
+            )}
           </div>
         </div>
         <div className={styles.heroOverlay}></div>
@@ -81,43 +100,42 @@ export default function Home() {
           <div className="divider"></div>
         </div>
 
-        {/* Category Filter */}
-        <div className={styles.categoryFilter}>
-          {categories.map(cat => (
-            <button
-              key={cat}
-              className={`${styles.categoryBtn} ${activeCategory === cat ? styles.categoryActive : ''}`}
-              onClick={() => { setActiveCategory(cat); setShowAll(false); }}
-            >
-              {cat}
-            </button>
-          ))}
+        {/* Search and Category Filter */}
+        <div className={styles.filterBar}>
+          <div className={styles.searchBox}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input 
+              type="text" 
+              placeholder="Search by title or artist..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={styles.searchInput}
+            />
+          </div>
+          
+          <div className={styles.categoryFilter}>
+            {categories.map(cat => (
+              <button
+                key={cat}
+                className={`${styles.categoryBtn} ${activeCategory === cat ? styles.categoryActive : ''}`}
+                onClick={() => { setActiveCategory(cat); setShowAll(false); }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
+
+        {filtered.length === 0 && searchQuery && (
+          <div className={styles.noResults}>
+            <p>No artworks found matching &quot;{searchQuery}&quot;</p>
+            <button className="btn-outline btn-sm" onClick={() => setSearchQuery("")}>Clear Search</button>
+          </div>
+        )}
 
         <div className={styles.grid}>
           {displayed.map((painting, idx) => (
-            <Link href={`/painting/${painting.id}`} key={painting.id} className={`${styles.card} glass animate-fade-in`} style={{ animationDelay: `${(idx % 4) * 0.15}s` }}>
-              <div className={styles.imgWrapper}>
-                <img src={painting.imageUrl} alt={painting.title} />
-                <div className={styles.imgOverlay}>
-                  <span className="btn-primary btn-sm">View Details</span>
-                </div>
-                {!painting.inStock && (
-                  <span className={`${styles.soldBadge} badge badge-danger`}>Sold</span>
-                )}
-              </div>
-              <div className={styles.cardInfo}>
-                <div className={styles.cardHeader}>
-                  <h3 className="serif">{painting.title}</h3>
-                  <span className={styles.price}>${painting.price.toLocaleString()}</span>
-                </div>
-                <p className={styles.artist}>by {painting.artist}</p>
-                <div className={styles.cardMeta}>
-                  <span className="badge badge-gold">{painting.category}</span>
-                  <span className={styles.medium}>{painting.medium}</span>
-                </div>
-              </div>
-            </Link>
+            <PaintingCard key={painting.id} painting={painting} index={idx} />
           ))}
         </div>
 
@@ -167,15 +185,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Newsletter */}
+      {/* Newsletter Section */}
       <section className={styles.newsletter}>
-        <div className={styles.newsletterInner}>
-          <h2 className="serif">Stay Inspired</h2>
-          <p>Get notified about new artworks, artist spotlights, and exclusive offers.</p>
-          <div className={styles.newsletterForm}>
-            <input type="email" placeholder="Enter your email" className="form-input" />
-            <button className="btn-primary">Subscribe</button>
-          </div>
+        <div className={styles.newsletterContent}>
+          <h2 className="serif">Join Our Collector&apos;s Circle</h2>
+          <p>Get early access to new collections and exclusive interviews with featured artists.</p>
+          
+          {user ? (
+            <p style={{ marginTop: "1rem", fontStyle: "italic" }}>You are already subscribed to our inner circle updates!</p>
+          ) : (
+            <form className={styles.newsletterForm} onSubmit={(e) => e.preventDefault()}>
+              <input type="email" placeholder="Enter your email address" required className="form-input" style={{ width: 'auto', minWidth: '300px' }} />
+              <button type="submit" className="btn-primary">Subscribe</button>
+            </form>
+          )}
         </div>
       </section>
     </div>

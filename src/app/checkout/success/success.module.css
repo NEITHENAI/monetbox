@@ -1,0 +1,109 @@
+.container {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.card {
+  max-width: 600px;
+  width: 100%;
+  padding: 4rem 3rem;
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.iconWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.checkIcon {
+  width: 100px;
+  height: 100px;
+  background: var(--success-muted);
+  color: var(--success);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 30px rgba(46, 204, 113, 0.2);
+}
+
+.subtitle {
+  color: var(--muted);
+  margin-top: 1rem;
+  font-size: 1.1rem;
+}
+
+.divider {
+  width: 80px;
+  height: 2px;
+  background: var(--accent);
+  margin: 2.5rem auto;
+  opacity: 0.5;
+}
+
+.nextSteps {
+  text-align: left;
+  margin-bottom: 3rem;
+}
+
+.nextSteps h3 {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+}
+
+.nextSteps ul {
+  list-style: none;
+}
+
+.nextSteps li {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+  align-items: flex-start;
+}
+
+.stepNumber {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  background: var(--surface-2);
+  border: 1px solid var(--glass-border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.nextSteps p {
+  font-size: 0.95rem;
+  color: #ccc;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+@media (max-width: 600px) {
+  .actions {
+    flex-direction: column;
+  }
+  
+  .card {
+    padding: 3rem 1.5rem;
+  }
+}

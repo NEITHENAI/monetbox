@@ -1,36 +1,49 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { paintings } from "@/lib/mockData";
+import { subscribeToPaintings } from "@/lib/db";
+import { useCart } from "@/contexts/CartContext";
+import { type Painting } from "@/lib/mockData";
+import PaintingCard from "@/components/PaintingCard";
 import styles from "./detail.module.css";
 
 export default function PaintingDetail() {
   const params = useParams();
-  const painting = paintings.find(p => p.id === params.id);
+  const { addToCart } = useCart();
+  const [paintings, setPaintings] = useState<Painting[]>([]);
+  const [loading, setLoading] = useState(true);
   const [addedToCart, setAddedToCart] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(0);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToPaintings((data) => {
+      setPaintings(data);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const painting = paintings.find(p => p.id === params.id);
+
+  if (loading) return <div className={styles.loading}>Loading artwork...</div>;
 
   if (!painting) {
     return (
       <div className={styles.notFound}>
         <h1 className="serif">Painting Not Found</h1>
-        <p>The artwork you&apos;re looking for doesn&apos;t exist.</p>
+        <p>The artwork you&apos;re looking for doesn&apos;t exist or has been removed.</p>
         <Link href="/" className="btn-primary">Back to Gallery</Link>
       </div>
     );
   }
 
   const handleAddToCart = () => {
-    const cart = JSON.parse(localStorage.getItem("monetbox_cart") || "[]");
-    const exists = cart.find((item: { id: string }) => item.id === painting.id);
-    if (!exists) {
-      cart.push({ ...painting, quantity: 1 });
-      localStorage.setItem("monetbox_cart", JSON.stringify(cart));
+    if (painting) {
+      addToCart(painting);
+      setAddedToCart(true);
+      setTimeout(() => setAddedToCart(false), 2000);
     }
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 2000);
   };
 
   // Related paintings (same category, different id)
@@ -93,7 +106,7 @@ export default function PaintingDetail() {
 
           <div className={styles.priceSection}>
             <div className={styles.priceTag}>
-              <span className={styles.priceCurrency}>$</span>
+              <span className={styles.priceCurrency}>UGX</span>
               <span className={styles.priceAmount}>{painting.price.toLocaleString()}</span>
             </div>
             <p className={styles.priceNote}>Includes certificate of authenticity</p>
@@ -134,16 +147,7 @@ export default function PaintingDetail() {
           <div className={styles.divider}></div>
           <div className={styles.relatedGrid}>
             {related.map((p, idx) => (
-              <Link href={`/painting/${p.id}`} key={p.id} className={`${styles.relatedCard} glass animate-fade-in`} style={{ animationDelay: `${idx * 0.15}s` }}>
-                <div className={styles.relatedImg}>
-                  <img src={p.imageUrl} alt={p.title} />
-                </div>
-                <div className={styles.relatedInfo}>
-                  <h3 className="serif">{p.title}</h3>
-                  <p>{p.artist}</p>
-                  <span className={styles.relatedPrice}>${p.price.toLocaleString()}</span>
-                </div>
-              </Link>
+              <PaintingCard key={p.id} painting={p} index={idx} />
             ))}
           </div>
         </section>

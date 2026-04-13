@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useCart } from "@/contexts/CartContext";
 import styles from "./cart.module.css";
 
 interface CartItem {
@@ -14,33 +15,23 @@ interface CartItem {
 }
 
 export default function CartPage() {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const { cart, removeFromCart, clearCart } = useCart();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem("monetbox_cart");
-    if (stored) {
-      setCart(JSON.parse(stored));
-    }
     setLoading(false);
   }, []);
 
-  const updateCart = (newCart: CartItem[]) => {
-    setCart(newCart);
-    localStorage.setItem("monetbox_cart", JSON.stringify(newCart));
-  };
-
-  const removeItem = (id: string) => {
-    updateCart(cart.filter(item => item.id !== id));
-  };
-
-  const clearCart = () => {
-    updateCart([]);
-  };
-
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = cart.length > 0 ? 0 : 0; // Free shipping
+  const shipping = 0; // Free shipping
   const total = subtotal + shipping;
+
+  const handleWhatsAppCheckout = () => {
+    const itemsList = cart.map(item => `• ${item.title} by ${item.artist} — UGX ${item.price.toLocaleString()}`).join('%0A');
+    const message = `Hello Monetbox! 🎨%0A%0AI would like to purchase the following artwork(s):%0A%0A${itemsList}%0A%0ATotal: UGX ${total.toLocaleString()}%0A%0APlease let me know how to proceed with payment. Thank you!`;
+    window.open(`https://wa.me/256701862309?text=${message}`, '_blank');
+    window.location.href = "/checkout/success";
+  };
 
   if (loading) return null;
 
@@ -83,14 +74,14 @@ export default function CartPage() {
                       </Link>
                       <p className={styles.itemArtist}>by {item.artist}</p>
                     </div>
-                    <button className={styles.removeBtn} onClick={() => removeItem(item.id)} aria-label="Remove item">
+                    <button className={styles.removeBtn} onClick={() => removeFromCart(item.id)} aria-label="Remove item">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                       </svg>
                     </button>
                   </div>
                   <div className={styles.itemBottom}>
-                    <span className={styles.itemPrice}>${item.price.toLocaleString()}</span>
+                    <span className={styles.itemPrice}>UGX {item.price.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -108,7 +99,7 @@ export default function CartPage() {
             <div className={styles.summaryLines}>
               <div className={styles.summaryLine}>
                 <span>Subtotal</span>
-                <span>${subtotal.toLocaleString()}</span>
+                <span>UGX {subtotal.toLocaleString()}</span>
               </div>
               <div className={styles.summaryLine}>
                 <span>Shipping</span>
@@ -122,17 +113,17 @@ export default function CartPage() {
 
             <div className={styles.summaryTotal}>
               <span>Total</span>
-              <span className={styles.totalAmount}>${total.toLocaleString()}</span>
+              <span className={styles.totalAmount}>UGX {total.toLocaleString()}</span>
             </div>
 
-            <button className={`btn-primary ${styles.checkoutBtn}`}>
-              Proceed to Checkout
+            <button className={`btn-primary ${styles.checkoutBtn}`} onClick={handleWhatsAppCheckout}>
+              💬 Order via WhatsApp
             </button>
 
             <div className={styles.summaryGuarantees}>
               <div className={styles.summaryGuarantee}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                <span>Secure checkout</span>
+                <span>Secure via WhatsApp</span>
               </div>
               <div className={styles.summaryGuarantee}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -140,7 +131,7 @@ export default function CartPage() {
               </div>
               <div className={styles.summaryGuarantee}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                <span>All cards accepted</span>
+                <span>Direct payment</span>
               </div>
             </div>
           </div>

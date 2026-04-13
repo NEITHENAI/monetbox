@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { paintings as initialPaintings, type Painting } from "@/lib/mockData";
+import { type Painting } from "@/lib/mockData";
+import { subscribeToPaintings, addPainting, updatePainting, deletePainting, seedPaintingsIfEmpty } from "@/lib/db";
 import styles from "./dashboard.module.css";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,7 +12,8 @@ export default function AdminDashboard() {
   const { user, isAdmin, loading, signOut } = useAuth();
   const router = useRouter();
   
-  const [paintingsList, setPaintingsList] = useState<Painting[]>(initialPaintings);
+  const [paintingsList, setPaintingsList] = useState<Painting[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
@@ -22,11 +24,16 @@ export default function AdminDashboard() {
     dimensions: "", medium: "", year: "", category: "Abstract",
   });
 
+
+  // Subscribe to Firestore paintings in real-time
   useEffect(() => {
-    if (!loading && (!user || !isAdmin)) {
-      router.push("/login");
-    }
-  }, [user, isAdmin, loading, router]);
+    seedPaintingsIfEmpty();
+    const unsubscribe = subscribeToPaintings((data) => {
+      setPaintingsList(data);
+      setDataLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const showToast = (type: string, message: string) => {
     setToast({ type, message });
@@ -39,23 +46,24 @@ export default function AdminDashboard() {
     setShowForm(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingId) {
-      setPaintingsList(prev => prev.map(p =>
-        p.id === editingId ? { ...p, ...form, price: Number(form.price), year: Number(form.year) } : p
-      ));
-      showToast("success", "Painting updated successfully!");
-    } else {
-      const newPainting: Painting = {
-        id: Date.now().toString(),
-        ...form,
-        price: Number(form.price),
-        year: Number(form.year),
-        inStock: true,
-      };
-      setPaintingsList(prev => [newPainting, ...prev]);
-      showToast("success", "Painting added successfully!");
+    try {
+      if (editingId) {
+        await updatePainting(editingId, { ...form, price: Number(form.price), year: Number(form.year) });
+        showToast("success", "Painting updated successfully!");
+      } else {
+        await addPainting({
+          ...form,
+          price: Number(form.price),
+          year: Number(form.year),
+          inStock: true,
+        });
+        showToast("success", "Painting added successfully!");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("error", "Something went wrong.");
     }
     resetForm();
   };
@@ -71,15 +79,25 @@ export default function AdminDashboard() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleDelete = (id: string) => {
-    setPaintingsList(prev => prev.filter(p => p.id !== id));
-    showToast("success", "Painting removed.");
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this painting from the gallery? This action cannot be undone.")) {
+      const success = await deletePainting(id);
+      if (success) {
+        showToast("success", "Painting deleted successfully");
+      } else {
+        showToast("error", "Failed to delete painting");
+      }
+    }
   };
 
-  const handleToggleStock = (id: string) => {
-    setPaintingsList(prev => prev.map(p =>
-      p.id === id ? { ...p, inStock: !p.inStock } : p
-    ));
+  const handleToggleStock = async (id: string) => {
+    const painting = paintingsList.find(p => p.id === id);
+    if (painting) {
+      const success = await updatePainting(id, { inStock: !painting.inStock });
+      if (!success) {
+        showToast("error", "Failed to update stock status");
+      }
+    }
   };
 
   const handleLogout = async () => {
@@ -87,7 +105,7 @@ export default function AdminDashboard() {
     router.push("/login");
   };
 
-  if (loading || !user || !isAdmin) return null;
+  if (loading || dataLoading || !user || !isAdmin) return null;
 
   return (
     <div className={styles.container}>
@@ -168,7 +186,7 @@ export default function AdminDashboard() {
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </div>
             <div>
-              <p className={styles.statValue}>${paintingsList.reduce((s, p) => s + p.price, 0).toLocaleString()}</p>
+              <p className={styles.statValue}>UGX {paintingsList.reduce((s, p) => s + p.price, 0).toLocaleString()}</p>
               <p className={styles.statLabel}>Total Value</p>
             </div>
           </div>
@@ -191,7 +209,7 @@ export default function AdminDashboard() {
                 <input className="form-input" value={form.artist} onChange={e => setForm({ ...form, artist: e.target.value })} required />
               </div>
               <div className="form-group">
-                <label className="form-label">Price ($)</label>
+                <label className="form-label">Price (UGX)</label>
                 <input className="form-input" type="number" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} required />
               </div>
               <div className="form-group">
@@ -263,7 +281,7 @@ export default function AdminDashboard() {
                     </td>
                     <td>{painting.artist}</td>
                     <td><span className="badge badge-gold">{painting.category}</span></td>
-                    <td className={styles.priceCell}>${painting.price.toLocaleString()}</td>
+                    <td className={styles.priceCell}>UGX {painting.price.toLocaleString()}</td>
                     <td>
                       <button
                         className={`badge ${painting.inStock ? 'badge-success' : 'badge-danger'}`}
