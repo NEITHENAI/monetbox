@@ -30,6 +30,7 @@ export default function Navbar() {
           
           <ul className={`nav-links ${isMenuOpen ? 'nav-links-active' : ''}`}>
             <li><Link href="/" onClick={() => setIsMenuOpen(false)}>Gallery</Link></li>
+            <li><Link href="/events" onClick={() => setIsMenuOpen(false)}>Events</Link></li>
             <li className="nav-cart">
                <Link href="/cart" onClick={() => setIsMenuOpen(false)}>
                  Cart 

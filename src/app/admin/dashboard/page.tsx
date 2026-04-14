@@ -7,6 +7,7 @@ import styles from "./dashboard.module.css";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import EventsPanel from "./EventsPanel";
 
 export default function AdminDashboard() {
   const { user, isAdmin, loading, signOut } = useAuth();
@@ -14,6 +15,7 @@ export default function AdminDashboard() {
   
   const [paintingsList, setPaintingsList] = useState<Painting[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"paintings" | "events" | "dashboard">("dashboard");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
@@ -155,13 +157,13 @@ export default function AdminDashboard() {
           <span className="badge badge-gold">Admin</span>
         </div>
         <nav className={styles.sidebarNav}>
-          <a href="#" className={styles.navItemActive}>
+          <a href="#" className={activeTab === "dashboard" || activeTab === "paintings" ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab("dashboard")}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            Dashboard
+            Paintings / Home
           </a>
-          <a href="#" className={styles.navItem}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-            Paintings
+          <a href="#" className={activeTab === "events" ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab("events")}>
+             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Events
           </a>
           <a href="#" className={styles.navItem}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
@@ -180,7 +182,11 @@ export default function AdminDashboard() {
 
       {/* Main Content */}
       <div className={styles.main}>
-        {/* Header */}
+        {activeTab === "events" ? (
+          <EventsPanel showToast={showToast} />
+        ) : (
+          <>
+            {/* Header */}
         <header className={styles.topBar}>
           <div>
             <h1 className={styles.pageTitle}>Dashboard</h1>
@@ -361,6 +367,8 @@ export default function AdminDashboard() {
             </table>
           </div>
         </div>
+          </>
+        )}
       </div>
 
       {/* Toast */}

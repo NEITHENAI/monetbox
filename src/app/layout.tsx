@@ -44,11 +44,11 @@ export default function RootLayout({
                   </ul>
                 </div>
                 <div className="footer-col">
-                  <h3>Support</h3>
+                  <h3>Contact Us</h3>
                   <ul>
-                    <li><a href="#">Shipping</a></li>
-                    <li><a href="#">Returns</a></li>
-                    <li><a href="#">Contact</a></li>
+                    <li><a href="mailto:monetboxgallery@gmail.com">monetboxgallery@gmail.com</a></li>
+                    <li><a href="https://wa.me/256701862309" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
+                    <li><a href="#">Shipping Details</a></li>
                   </ul>
                 </div>
               </div>

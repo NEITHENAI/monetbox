@@ -130,11 +130,7 @@ export default function PaintingDetail() {
             </div>
             <div className={styles.guarantee}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-              <span>Free Shipping</span>
-            </div>
-            <div className={styles.guarantee}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-              <span>30-Day Returns</span>
+              <span>Free Shipping to Kampala Only</span>
             </div>
           </div>
         </div>

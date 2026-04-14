@@ -28,14 +28,6 @@ export default function CartPage() {
   const shipping = 0; // Free shipping
   const total = subtotal + shipping;
 
-  const handleWhatsAppCheckout = () => {
-    const itemsList = cart.map(item => `• ${item.title} by ${item.artist} — UGX ${item.price.toLocaleString()}`).join('%0A');
-    const message = `Hello Monetbox! 🎨%0A%0AI would like to purchase the following artwork(s):%0A%0A${itemsList}%0A%0ATotal: UGX ${total.toLocaleString()}%0A%0APlease let me know how to proceed with payment. Thank you!`;
-    window.open(`https://wa.me/256701862309?text=${message}`, '_blank');
-    clearCart();
-    window.location.href = "/checkout/success";
-  };
-
   const handleFormOrder = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -184,7 +176,7 @@ export default function CartPage() {
               </div>
               <div className={styles.summaryLine}>
                 <span>Shipping</span>
-                <span className={styles.freeShipping}>Free</span>
+                <span className={styles.freeShipping}>Free (Kampala only)</span>
               </div>
               <div className={styles.summaryLine}>
                 <span>Insurance</span>
@@ -198,11 +190,8 @@ export default function CartPage() {
             </div>
 
             <div className={styles.checkoutActions}>
-              <button className={`btn-primary ${styles.checkoutBtn}`} onClick={handleWhatsAppCheckout}>
-                💬 Order via WhatsApp
-              </button>
-              <button className={`btn-outline ${styles.formCheckoutBtn}`} onClick={() => setShowOrderForm(true)}>
-                📝 Order via Form
+              <button className={`btn-primary ${styles.formCheckoutBtn}`} onClick={() => setShowOrderForm(true)} style={{ width: '100%' }}>
+                📝 Checkout securely
               </button>
             </div>
 

@@ -159,3 +159,51 @@ export async function deletePainting(id: string): Promise<boolean> {
     return false;
   }
 }
+
+// ==========================================
+// EVENTS API
+// ==========================================
+
+const EVENTS_COLLECTION = "events";
+
+export interface GalleryEvent {
+  id: string;
+  title: string;
+  date: string;
+  imageUrl: string; // Will store the Base64 string
+}
+
+export function subscribeToEvents(
+  callback: (events: GalleryEvent[]) => void
+) {
+  return onSnapshot(
+    query(collection(db, EVENTS_COLLECTION), orderBy("date")),
+    (snapshot) => {
+      const data = snapshot.docs.map(
+        (d) => ({ id: d.id, ...d.data() } as GalleryEvent)
+      );
+      callback(data);
+    }
+  );
+}
+
+export async function addEvent(
+  event: Omit<GalleryEvent, "id">
+): Promise<string> {
+  const docRef = await addDoc(
+    collection(db, EVENTS_COLLECTION),
+    event
+  );
+  return docRef.id;
+}
+
+export async function deleteEvent(id: string): Promise<boolean> {
+  try {
+    await deleteDoc(doc(db, EVENTS_COLLECTION, id));
+    return true;
+  } catch (e) {
+    console.error("Delete event failed", e);
+    return false;
+  }
+}
+
