@@ -13,7 +13,7 @@ export default function EventsPanel({ showToast }: EventsPanelProps) {
   const [showForm, setShowForm] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  const [form, setForm] = useState({ title: "", date: "", imageUrl: "" });
+  const [form, setForm] = useState({ title: "", date: "", imageUrl: "", price: "" });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -25,7 +25,7 @@ export default function EventsPanel({ showToast }: EventsPanelProps) {
   }, []);
 
   const resetForm = () => {
-    setForm({ title: "", date: "", imageUrl: "" });
+    setForm({ title: "", date: "", imageUrl: "", price: "" });
     setSelectedFile(null);
     setShowForm(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -60,6 +60,7 @@ export default function EventsPanel({ showToast }: EventsPanelProps) {
       await addEvent({
         title: form.title,
         date: form.date,
+        price: Number(form.price),
         imageUrl: finalImageUrl,
       });
 
@@ -123,6 +124,10 @@ export default function EventsPanel({ showToast }: EventsPanelProps) {
               <label className="form-label">Date and Time</label>
               <input className="form-input" type="text" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} required placeholder="e.g. August 15th, 2026 at 6:00 PM" />
             </div>
+            <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+              <label className="form-label">Price per Ticket (UGX)</label>
+              <input className="form-input" type="number" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} required placeholder="e.g. 50000" />
+            </div>
             
             <div className="form-group" style={{ gridColumn: "1 / -1" }}>
               <label className="form-label">Event Cover Image</label>
@@ -166,6 +171,7 @@ export default function EventsPanel({ showToast }: EventsPanelProps) {
               <tr>
                 <th>Event</th>
                 <th>Date</th>
+                <th>Price</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -179,6 +185,7 @@ export default function EventsPanel({ showToast }: EventsPanelProps) {
                     </div>
                   </td>
                   <td>{item.date}</td>
+                  <td>UGX {item.price?.toLocaleString()}</td>
                   <td>
                     <div className={styles.actions}>
                       <button className="btn-danger btn-sm" onClick={() => handleDelete(item.id)}>Delete</button>

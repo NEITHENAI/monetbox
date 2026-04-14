@@ -104,14 +104,14 @@
   flex-grow: 1;
 }
 
-.eventDate {
+.eventDate, .eventPrice {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   color: var(--accent);
   font-size: 0.9rem;
   font-weight: 500;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .eventTitle {

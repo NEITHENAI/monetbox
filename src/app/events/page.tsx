@@ -7,7 +7,7 @@ import styles from "./events.module.css";
 export default function EventsPage() {
   const [events, setEvents] = useState<GalleryEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [ticketModal, setTicketModal] = useState<{ isOpen: boolean; eventTitle: string }>({ isOpen: false, eventTitle: "" });
+  const [ticketModal, setTicketModal] = useState<{ isOpen: boolean; eventTitle: string; eventPrice: string }>({ isOpen: false, eventTitle: "", eventPrice: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -18,12 +18,12 @@ export default function EventsPage() {
     return () => unsubscribe();
   }, []);
 
-  const openTicketForm = (eventTitle: string) => {
-    setTicketModal({ isOpen: true, eventTitle });
+  const openTicketForm = (eventTitle: string, eventPrice: string) => {
+    setTicketModal({ isOpen: true, eventTitle, eventPrice });
   };
 
   const closeTicketForm = () => {
-    setTicketModal({ isOpen: false, eventTitle: "" });
+    setTicketModal({ isOpen: false, eventTitle: "", eventPrice: "" });
   };
 
   const handleTicketOrder = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -39,6 +39,7 @@ export default function EventsPage() {
       subject: `Ticket Request: ${ticketModal.eventTitle} - Monetbox`,
       from_name: "Monetbox Events",
       event_name: ticketModal.eventTitle,
+      ticket_price: ticketModal.eventPrice,
     };
 
     try {
@@ -99,8 +100,12 @@ export default function EventsPage() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                   <span>{event.date}</span>
                 </div>
+                <div className={styles.eventPrice}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  <span>UGX {event.price?.toLocaleString() || "Free"}</span>
+                </div>
                 <h3 className={`${styles.eventTitle} serif`}>{event.title}</h3>
-                <button className="btn-primary" onClick={() => openTicketForm(event.title)} style={{ width: '100%', marginTop: 'auto' }}>
+                <button className="btn-primary" onClick={() => openTicketForm(event.title, event.price?.toLocaleString() || "Free")} style={{ width: '100%', marginTop: 'auto' }}>
                   🎫 Get Ticket
                 </button>
               </div>
@@ -117,7 +122,7 @@ export default function EventsPage() {
               <h2 className="serif">Reserve Ticket</h2>
               <button className={styles.closeBtn} onClick={closeTicketForm}>&times;</button>
             </div>
-            <p className={styles.formSubtitle}>For: <strong>{ticketModal.eventTitle}</strong></p>
+            <p className={styles.formSubtitle}>For: <strong>{ticketModal.eventTitle}</strong> — <span style={{ color: "var(--accent)" }}>UGX {ticketModal.eventPrice}</span></p>
             
             <form onSubmit={handleTicketOrder}>
               <div className={styles.formGrid}>

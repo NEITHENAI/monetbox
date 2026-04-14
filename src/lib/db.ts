@@ -170,6 +170,7 @@ export interface GalleryEvent {
   id: string;
   title: string;
   date: string;
+  price: number;
   imageUrl: string; // Will store the Base64 string
 }
 
