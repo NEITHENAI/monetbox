@@ -70,6 +70,37 @@
   position: absolute;
   top: 1rem;
   left: 1rem;
+  z-index: 2;
+}
+
+.expandIcon {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 44px;
+  height: 44px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.mainImage:hover .expandIcon {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mainImage {
+  cursor: zoom-in;
 }
 
 /* Info Section */
@@ -320,5 +351,104 @@
 
   .relatedGrid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Lightbox */
+.lightboxOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 10, 10, 0.95);
+  backdrop-filter: blur(10px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.closeLightbox {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 3rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  z-index: 2001;
+}
+
+.closeLightbox:hover {
+  opacity: 1;
+}
+
+.lightboxContent {
+  position: relative;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: scaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lightboxImage {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+}
+
+.lightboxInfo {
+  margin-top: 2rem;
+  text-align: center;
+  color: white;
+}
+
+.lightboxInfo h3 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.lightboxInfo p {
+  opacity: 0.7;
+  font-size: 1rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 768px) {
+  .expandIcon {
+    opacity: 1;
+    transform: none;
+    width: 38px;
+    height: 38px;
+    bottom: 1rem;
+    right: 1rem;
+  }
+  
+  .lightboxOverlay {
+    padding: 1rem;
+  }
+  
+  .lightboxInfo h3 {
+    font-size: 1.4rem;
   }
 }

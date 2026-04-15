@@ -15,6 +15,7 @@ export default function PaintingDetail() {
   const [paintings, setPaintings] = useState<Painting[]>([]);
   const [loading, setLoading] = useState(true);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [showLightbox, setShowLightbox] = useState(false);
 
   useEffect(() => {
     const unsubscribe = subscribeToPaintings((data) => {
@@ -62,10 +63,13 @@ export default function PaintingDetail() {
       <div className={styles.detailGrid}>
         {/* Image Section */}
         <div className={styles.imageSection}>
-          <div className={`${styles.mainImage} animate-fade-in`}>
+          <div className={`${styles.mainImage} animate-fade-in`} onClick={() => setShowLightbox(true)}>
             <img src={painting.imageUrl} alt={painting.title} />
             <div className={styles.imageOverlay}>
               <span className="badge badge-gold">{painting.category}</span>
+            </div>
+            <div className={styles.expandIcon}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
             </div>
           </div>
         </div>
@@ -151,6 +155,20 @@ export default function PaintingDetail() {
 
       {addedToCart && (
         <div className="toast toast-success">✓ Added to cart!</div>
+      )}
+
+      {/* Lightbox Modal */}
+      {showLightbox && (
+        <div className={styles.lightboxOverlay} onClick={() => setShowLightbox(false)}>
+          <button className={styles.closeLightbox} onClick={() => setShowLightbox(false)}>&times;</button>
+          <div className={styles.lightboxContent} onClick={(e) => e.stopPropagation()}>
+            <img src={painting.imageUrl} alt={painting.title} className={styles.lightboxImage} />
+            <div className={styles.lightboxInfo}>
+              <h3 className="serif">{painting.title}</h3>
+              <p>{painting.artist} • {painting.dimensions}</p>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
