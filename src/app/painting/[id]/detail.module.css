@@ -103,6 +103,51 @@
   cursor: zoom-in;
 }
 
+/* Thumbnails */
+.thumbnailContainer {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.thumbnailContainer::-webkit-scrollbar {
+  height: 6px;
+}
+
+.thumbnailContainer::-webkit-scrollbar-thumb {
+  background-color: var(--glass-border);
+  border-radius: 10px;
+}
+
+.thumbnail {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  border: 2px solid transparent;
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnail:hover {
+  opacity: 0.8;
+}
+
+.thumbnailActive {
+  opacity: 1;
+  border-color: var(--accent);
+}
+
 /* Info Section */
 .infoSection {
   opacity: 0;
@@ -422,6 +467,36 @@
 .lightboxInfo p {
   opacity: 0.7;
   font-size: 1rem;
+}
+
+.lightboxNav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.5);
+  color: white;
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  z-index: 2002;
+}
+
+.lightboxNav:hover {
+  background: rgba(0,0,0,0.8);
+}
+
+.lightboxPrev {
+  left: 2rem;
+}
+
+.lightboxNext {
+  right: 2rem;
 }
 
 @keyframes fadeIn {

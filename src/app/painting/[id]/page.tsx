@@ -17,6 +17,8 @@ export default function PaintingDetail() {
   const [addedToCart, setAddedToCart] = useState(false);
   const [showLightbox, setShowLightbox] = useState(false);
 
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
   useEffect(() => {
     const unsubscribe = subscribeToPaintings((data) => {
       setPaintings(data);
@@ -26,6 +28,9 @@ export default function PaintingDetail() {
   }, []);
 
   const painting = paintings.find(p => p.id === params.id);
+
+  // Derive images array once painting is loaded
+  const images = painting ? (painting.imageUrls && painting.imageUrls.length > 0 ? painting.imageUrls : [painting.imageUrl || ""]) : [];
 
   if (loading) return <div className={styles.loading}>Loading artwork...</div>;
 
@@ -47,6 +52,16 @@ export default function PaintingDetail() {
     }
   };
 
+  const nextImage = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setActiveImageIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setActiveImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  };
+
   // Related paintings (same category, different id)
   const related = paintings.filter(p => p.category === painting.category && p.id !== painting.id).slice(0, 3);
 
@@ -64,7 +79,7 @@ export default function PaintingDetail() {
         {/* Image Section */}
         <div className={styles.imageSection}>
           <div className={`${styles.mainImage} animate-fade-in`} onClick={() => setShowLightbox(true)}>
-            <img src={getImageUrl(painting)} alt={painting.title} />
+            <img src={images[activeImageIndex]} alt={`${painting.title} - view ${activeImageIndex + 1}`} />
             <div className={styles.imageOverlay}>
               <span className="badge badge-gold">{painting.category}</span>
             </div>
@@ -72,6 +87,21 @@ export default function PaintingDetail() {
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
             </div>
           </div>
+          
+          {/* Thumbnails row */}
+          {images.length > 1 && (
+            <div className={styles.thumbnailContainer}>
+              {images.map((img, idx) => (
+                <div 
+                  key={idx} 
+                  className={`${styles.thumbnail} ${activeImageIndex === idx ? styles.thumbnailActive : ''}`}
+                  onClick={() => setActiveImageIndex(idx)}
+                >
+                  <img src={img} alt={`Thumbnail ${idx + 1}`} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Info Section */}
@@ -157,17 +187,31 @@ export default function PaintingDetail() {
         <div className="toast toast-success">✓ Added to cart!</div>
       )}
 
-      {/* Lightbox Modal */}
+      {/* Lightbox */}
       {showLightbox && (
         <div className={styles.lightboxOverlay} onClick={() => setShowLightbox(false)}>
-          <button className={styles.closeLightbox} onClick={() => setShowLightbox(false)}>&times;</button>
+          <button className={styles.closeLightbox}>&times;</button>
+          
+          {images.length > 1 && (
+            <button className={`${styles.lightboxNav} ${styles.lightboxPrev}`} onClick={prevImage}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+          )}
+
           <div className={styles.lightboxContent} onClick={(e) => e.stopPropagation()}>
-            <img src={getImageUrl(painting)} alt={painting.title} className={styles.lightboxImage} />
+            <img src={images[activeImageIndex]} alt={painting.title} className={styles.lightboxImage} />
             <div className={styles.lightboxInfo}>
-              <h3 className="serif">{painting.title}</h3>
-              <p>{painting.artist} • {painting.dimensions}</p>
+              <h3>{painting.title}</h3>
+              <p>{painting.artist}</p>
+              {images.length > 1 && <p style={{ marginTop: '0.5rem', opacity: 0.8 }}>{activeImageIndex + 1} / {images.length}</p>}
             </div>
           </div>
+
+          {images.length > 1 && (
+            <button className={`${styles.lightboxNav} ${styles.lightboxNext}`} onClick={nextImage}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          )}
         </div>
       )}
     </div>
