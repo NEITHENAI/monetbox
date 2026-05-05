@@ -64,8 +64,8 @@ export default function ArtistDashboard() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (files.length === 0) {
-      setError("Please upload at least one image.");
+    if (files.length < 4) {
+      setError("Please upload exactly 4 images to showcase your artwork.");
       return;
     }
     
@@ -163,7 +163,7 @@ export default function ArtistDashboard() {
           </div>
 
           <div style={{ marginBottom: "30px" }}>
-            <label style={{ display: "block", marginBottom: "8px" }}>Images (Up to 4)</label>
+            <label style={{ display: "block", marginBottom: "8px" }}>Images (Exactly 4 Required)</label>
             <input type="file" accept="image/*" multiple onChange={handleFileChange} disabled={submitting || files.length >= 4} className="form-input" />
             
             {files.length > 0 && (
