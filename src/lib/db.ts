@@ -341,9 +341,10 @@ export async function getArtists(): Promise<ArtistApplication[]> {
 
 export async function removeArtist(uid: string): Promise<boolean> {
   try {
-    // Revoke the role in /users
+    // 1. Revoke the role in /users
     await updateUserRole(uid, "user");
-    // Also update their application status back to rejected
+    
+    // 2. Update their application status back to rejected
     try {
       const appSnapshot = await getDocs(
         query(
@@ -358,6 +359,22 @@ export async function removeArtist(uid: string): Promise<boolean> {
     } catch (e2) {
       console.error("Error revoking application status:", e2);
     }
+
+    // 3. Delete all their art pieces
+    try {
+      const paintingsSnapshot = await getDocs(
+        query(
+          collection(db, "paintings"),
+          where("artistId", "==", uid)
+        )
+      );
+      for (const paintingDoc of paintingsSnapshot.docs) {
+        await deleteDoc(doc(db, "paintings", paintingDoc.id));
+      }
+    } catch (e3) {
+      console.error("Error deleting artist paintings:", e3);
+    }
+
     return true;
   } catch (e) {
     console.error("Error removing artist:", e);
