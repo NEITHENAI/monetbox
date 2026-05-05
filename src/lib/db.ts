@@ -339,7 +339,7 @@ export async function getArtists(): Promise<ArtistApplication[]> {
   }
 }
 
-export async function removeArtist(uid: string): Promise<boolean> {
+export async function removeArtist(uid: string): Promise<{success: boolean, error?: string}> {
   try {
     // 1. Revoke the role in /users
     await updateUserRole(uid, "user");
@@ -356,8 +356,9 @@ export async function removeArtist(uid: string): Promise<boolean> {
       for (const appDoc of appSnapshot.docs) {
         await updateDoc(doc(db, APPLICATIONS_COLLECTION, appDoc.id), { status: "rejected" });
       }
-    } catch (e2) {
+    } catch (e2: any) {
       console.error("Error revoking application status:", e2);
+      return { success: false, error: "Failed to update application status: " + e2.message };
     }
 
     // 3. Delete all their art pieces
@@ -371,14 +372,15 @@ export async function removeArtist(uid: string): Promise<boolean> {
       for (const paintingDoc of paintingsSnapshot.docs) {
         await deleteDoc(doc(db, "paintings", paintingDoc.id));
       }
-    } catch (e3) {
+    } catch (e3: any) {
       console.error("Error deleting artist paintings:", e3);
+      return { success: false, error: "Failed to delete paintings: " + e3.message };
     }
 
-    return true;
-  } catch (e) {
+    return { success: true };
+  } catch (e: any) {
     console.error("Error removing artist:", e);
-    return false;
+    return { success: false, error: e.message };
   }
 }
 

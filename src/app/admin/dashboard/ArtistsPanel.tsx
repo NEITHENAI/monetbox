@@ -21,12 +21,12 @@ export default function ArtistsPanel({ showToast }: { showToast: (type: string, 
 
   const handleRemove = async (uid: string) => {
     if (window.confirm("Are you sure you want to remove this user from the artists group? Their role will be reverted to 'user'.")) {
-      const success = await removeArtist(uid);
-      if (success) {
+      const result = await removeArtist(uid);
+      if (result.success) {
         showToast("success", "Artist removed successfully.");
         fetchArtists();
       } else {
-        showToast("error", "Failed to remove artist.");
+        showToast("error", result.error || "Failed to remove artist.");
       }
     }
   };
