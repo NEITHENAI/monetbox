@@ -257,17 +257,17 @@ export async function updateUserRole(uid: string, role: "admin" | "artist" | "us
   }
 }
 
-export async function submitArtistApplication(app: Omit<ArtistApplication, "id" | "status" | "createdAt">): Promise<boolean> {
+export async function submitArtistApplication(app: Omit<ArtistApplication, "id" | "status" | "createdAt">): Promise<{success: boolean, error?: string}> {
   try {
     await addDoc(collection(db, APPLICATIONS_COLLECTION), {
       ...app,
       status: "pending",
       createdAt: Date.now(),
     });
-    return true;
-  } catch (e) {
+    return { success: true };
+  } catch (e: any) {
     console.error("Error submitting application:", e);
-    return false;
+    return { success: false, error: e.message };
   }
 }
 

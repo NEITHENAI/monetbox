@@ -143,12 +143,12 @@ export default function ApplyPage() {
         profilePictureUrl,
       });
 
-      if (result) {
+      if (result.success) {
         // Refresh to show pending status
         const app = await getUserApplication(user.uid);
         setExistingApp(app);
       } else {
-        setError("Failed to submit application. Please try again.");
+        setError("Failed to submit application: " + result.error);
       }
     } catch (err: any) {
       setError(err.message || "An error occurred");
