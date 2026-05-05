@@ -1,0 +1,121 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------------------------------------------------------------------------
+    // Helper Functions
+    // -------------------------------------------------------------------------
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isArtist() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'artist';
+    }
+
+    function isExistingDoc() {
+      return resource != null;
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection Rules
+    // -------------------------------------------------------------------------
+
+    // --- User Profiles ---
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) || isAdmin();
+      allow update: if (isOwner(userId) || isAdmin()) && isExistingDoc();
+      allow delete: if isOwner(userId) && isExistingDoc();
+    }
+
+    // --- Admin Lookup ---
+    match /admins/{adminId} {
+      allow get: if isSignedIn();
+      allow list: if false;
+      allow create: if isAdmin() || (request.auth.token.email == 'admin@monetbox.com' && request.auth.uid == adminId);
+      allow update: if isAdmin() && isExistingDoc();
+      allow delete: if isAdmin() && isExistingDoc();
+    }
+
+    // --- Paintings (public read, admin + artist write) ---
+    match /paintings/{paintingId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin() || isArtist();
+      allow update: if isAdmin() || (isArtist() && isExistingDoc() && resource.data.artistId == request.auth.uid);
+      allow delete: if isAdmin() || (isArtist() && isExistingDoc() && resource.data.artistId == request.auth.uid);
+    }
+
+    // --- Artist Applications ---
+    match /artist_applications/{applicationId} {
+      allow get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow list: if isAdmin() || isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin() && isExistingDoc();
+      allow delete: if isAdmin() && isExistingDoc();
+    }
+
+    // --- Events (public read, admin write) ---
+    match /events/{eventId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin() && isExistingDoc();
+      allow delete: if isAdmin() && isExistingDoc();
+    }
+
+    // --- Metadata (system collection for seeding) ---
+    match /metadata/{docId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // --- Shopping Carts ---
+    match /users/{userId}/shoppingCarts/{shoppingCartId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && isExistingDoc();
+      allow delete: if isOwner(userId) && isExistingDoc();
+
+      match /cartItems/{cartItemId} {
+        allow get: if isOwner(userId) || isAdmin();
+        allow list: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId) && isExistingDoc();
+        allow delete: if isOwner(userId) && isExistingDoc();
+      }
+    }
+
+    // --- Orders ---
+    match /users/{userId}/orders/{orderId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isAdmin() && isExistingDoc();
+      allow delete: if false;
+
+      match /orderItems/{orderItemId} {
+        allow get: if isOwner(userId) || isAdmin();
+        allow list: if isOwner(userId) || isAdmin();
+        allow create: if false;
+        allow update: if false;
+        allow delete: if false;
+      }
+    }
+  }
+}
