@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { onAuthStateChanged, User, signOut as firebaseSignOut } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { getUserRole } from "@/lib/db";
 
 interface AuthContextType {
@@ -48,6 +48,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Fallback: check email match for admin
     if (firebaseUser.email === "admin@monetbox.com") {
       setRole("admin");
+      // Auto-create the admin document so Firestore rules know this user is an admin
+      try {
+        await setDoc(doc(db, "admins", firebaseUser.uid), { email: firebaseUser.email, createdAt: Date.now() });
+      } catch (e) {
+        console.error("Failed to auto-create admin doc", e);
+      }
       return;
     }
 
