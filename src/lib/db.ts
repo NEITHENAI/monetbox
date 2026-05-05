@@ -345,6 +345,7 @@ export async function removeArtist(uid: string): Promise<{success: boolean, erro
     await updateUserRole(uid, "user");
     
     // 2. Update their application status back to rejected
+    let artistName = "";
     try {
       const appSnapshot = await getDocs(
         query(
@@ -354,6 +355,7 @@ export async function removeArtist(uid: string): Promise<{success: boolean, erro
         )
       );
       for (const appDoc of appSnapshot.docs) {
+        artistName = appDoc.data().artistName; // capture name for legacy paintings
         await updateDoc(doc(db, APPLICATIONS_COLLECTION, appDoc.id), { status: "rejected" });
       }
     } catch (e2: any) {
@@ -363,14 +365,22 @@ export async function removeArtist(uid: string): Promise<{success: boolean, erro
 
     // 3. Delete all their art pieces
     try {
-      const paintingsSnapshot = await getDocs(
-        query(
-          collection(db, "paintings"),
-          where("artistId", "==", uid)
-        )
+      // Delete by ID (modern way)
+      const paintingsById = await getDocs(
+        query(collection(db, "paintings"), where("artistId", "==", uid))
       );
-      for (const paintingDoc of paintingsSnapshot.docs) {
+      for (const paintingDoc of paintingsById.docs) {
         await deleteDoc(doc(db, "paintings", paintingDoc.id));
+      }
+
+      // Delete by Name (for older paintings created before artistId was enforced)
+      if (artistName) {
+        const paintingsByName = await getDocs(
+          query(collection(db, "paintings"), where("artist", "==", artistName))
+        );
+        for (const paintingDoc of paintingsByName.docs) {
+          await deleteDoc(doc(db, "paintings", paintingDoc.id));
+        }
       }
     } catch (e3: any) {
       console.error("Error deleting artist paintings:", e3);
